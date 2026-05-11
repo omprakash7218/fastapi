@@ -1,0 +1,7 @@
+"terminal.integrated.profiles.windows": {
+    "FastAPI-Env": {
+        "path": "pwsh.exe",
+        "args": ["-NoExit", "-Command", "& .\\venv\\Scripts\\Activate.ps1"]
+    }
+},
+"terminal.integrated.defaultProfile.windows": "FastAPI-Env"
