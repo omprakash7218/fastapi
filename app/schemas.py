@@ -39,3 +39,6 @@ class UserOut(BaseModel):
     created_at: datetime
     class config:
         orm_mode = True
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str

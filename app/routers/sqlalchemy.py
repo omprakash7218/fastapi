@@ -3,7 +3,7 @@ from fastapi.exception_handlers import http_exception_handler
 from ..database import engine, get_db
 from sqlalchemy.orm import Session
 from .. import models,schemas
-
+from typing import List
 
 models.Base.metadata.create_all(bind = engine)
 app = FastAPI()
@@ -12,6 +12,14 @@ app = FastAPI()
 #--------------------------------------------------------------------------------------------------------------
 @app.get("/")
 def get_post(db: Session= Depends(get_db)):
+    posts = db.query(models.Post).all()
+    return posts
+#--------------------------------------------------------------------------------------------------------------
+
+# ? GET ALL POST BUT RESPONSE IS FILTERED FIRST 
+#--------------------------------------------------------------------------------------------------------------
+@app.get("/posts",response_model = List[schemas.Post_Response])
+def show_posts(db:Session=Depends(get_db)):
     posts = db.query(models.Post).all()
     return posts
 #--------------------------------------------------------------------------------------------------------------
