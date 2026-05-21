@@ -21,7 +21,7 @@ class PostCreate(PostBase):
 class Post_Response(PostBase):
     id:int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Fablue Stuffed Bamboo Panda Plush Toy | White & Black Panda with Green Bag | Gift for Boys & Girls
 # class UserCreate(BaseModel):
@@ -37,8 +37,8 @@ class UserOut(BaseModel):
     email: EmailStr
     id:int
     created_at: datetime
-    class config:
-        orm_mode = True
+    class Config:
+        from_attributes = True
 class UserLogin(BaseModel):
     email: EmailStr
     password: str

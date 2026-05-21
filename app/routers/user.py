@@ -29,13 +29,13 @@ router = APIRouter(
 #         raise HTTPException(status_code = 400, detail = str(e))
 # ? Get all users 
 @router.get("/",response_model=List[schemas.UserOut],status_code = status.HTTP_202_ACCEPTED)
-def get_users(db:Session=Depends(get_db),get_current_user:int=Depends(oauth2.get_current_user)):
+def get_users(db:Session=Depends(get_db),user_id:int=Depends(oauth2.get_current_user)):
     users = db.query(models.User).all()
     return users
 
 # ? Create new user with hashed password
 @router.post("/",status_code = status.HTTP_201_CREATED,response_model= schemas.UserOut)
-def create_user(user:schemas.UserCreate,db:Session=Depends(get_db)):
+def create_user(user:schemas.UserCreate,db:Session=Depends(get_db),current_user:int = Depends(oauth2.get_current_user)):
     hashed_password = utils.hash(user.password)
     user.password = hashed_password
     new_user = models.User(**user.dict())
@@ -46,7 +46,8 @@ def create_user(user:schemas.UserCreate,db:Session=Depends(get_db)):
 
 # ? Get User using id.
 @router.get('/{id}',response_model = schemas.UserOut)
-def get_user(id:int,db:Session=Depends(get_db),get_current_user:int=Depends(oauth2.get_current_user)):
+def get_user(id:int,db:Session=Depends(get_db),current_user:int=Depends(oauth2.get_current_user)):
+    print(current_user.email)
     user = db.query(models.User).filter(models.User.id == id ).first()
     if not user:
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND,detail = f"The user with id:{id} does not exist in the database.")
