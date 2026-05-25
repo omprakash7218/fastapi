@@ -14,17 +14,18 @@ router = APIRouter(
 )
 # ? GET ALL POST AT ONCE
 #--------------------------------------------------------------------------------------------------------------
-@router.get("/")
-def get_post(db: Session= Depends(get_db),current_user:int=Depends(oauth2.get_current_user)):
-    posts = db.query(models.Post).all()
-    return posts
+# @router.get("/")
+# def get_post(db: Session= Depends(get_db),current_user:schemas.UserOut=Depends(oauth2.get_current_user)):
+#     posts = db.query(models.Post).all()
+#     return posts
 #--------------------------------------------------------------------------------------------------------------
 
 # ? GET ALL POST BUT RESPONSE IS FILTERED FIRST 
 #--------------------------------------------------------------------------------------------------------------
 @router.get("/",response_model = List[schemas.Post_Response])
-def show_posts(db:Session=Depends(get_db),current_user:int=Depends(oauth2.get_current_user)):
-    posts = db.query(models.Post).all()
+def show_posts(db:Session=Depends(get_db),current_user:schemas.UserOut=Depends(oauth2.get_current_user),limit: int = 10):
+    print(limit)
+    posts = db.query(models.Post).limit(limit).all()
     return posts
 #--------------------------------------------------------------------------------------------------------------
 
@@ -35,6 +36,10 @@ def get_post(id:int,db:Session = Depends(get_db),current_user:int=Depends(oauth2
     post=db.query(models.Post).filter(models.Post.id == id).first()
     if post == None:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND,detail=f"No post with id = {id}")
+    
+    if post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Unauthrized User")
+    print("Requested by: ",current_user.email)
     return post
 #--------------------------------------------------------------------------------------------------------------
 
@@ -42,8 +47,7 @@ def get_post(id:int,db:Session = Depends(get_db),current_user:int=Depends(oauth2
 #--------------------------------------------------------------------------------------------------------------
 @router.post("/",status_code=status.HTTP_201_CREATED,response_model = schemas.Post_Response)
 def create_post(post:schemas.Post,db:Session=Depends(get_db),current_user:schemas.UserOut=Depends(oauth2.get_current_user)):
-    print(current_user.email)
-    new_post = models.Post(**post.dict())
+    new_post = models.Post(owner_id = current_user.id,**post.dict())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)   # !
@@ -59,6 +63,8 @@ def edit_post(id: int, post: schemas.Post,db: Session= Depends(get_db),current_u
     existing_post = query_post.first()
     if existing_post == None:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND,detail = f"No post with id = {id}")
+    if existing_post.owner_id != current_user.id:
+        raise HTTPException(status_code= status.HTTP_403_FORBIDDEN,detail="Unauthorized access")
     query_post.update(post.dict(),synchronize_session = False)
     db.commit()
     return query_post.first()
@@ -72,7 +78,17 @@ def delete_post(id:int,db:Session = Depends(get_db),current_user:int=Depends(oau
     query_post= db.query(models.Post).filter(models.Post.id == id)
     if query_post.first() == None:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND,detail=f"Looks like you have entered an invalide id({id})")
+    if query_post.first().owner_id != current_user.id:
+        raise HTTPException(status_code = status.HTTP_403_FORBIDDEN,detail="Unauthorized Access")
     query_post.delete(synchronize_session= False)
     db.commit()
     return Response(status_code = status.HTTP_204_NO_CONTENT)
 #--------------------------------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------------------------------
+# what if i want to see all the post by a specific owner id 
+# @router.get("/",response_model = List[schemas.Post_Response])
+# def show_posts(db:Session=Depends(get_db),current_user:schemas.UserOut=Depends(oauth2.get_current_user)):
+#     print("Requested by: ",current_user.email)
+#     posts = db.query(models.Post).filter(models.Post.owner_id == current_user.id).all()
+#     return posts

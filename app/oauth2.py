@@ -41,7 +41,6 @@ def get_current_user(token:str=Depends(oauth2_scheme),db:Session = Depends(datab
     return schemas.UserOut.model_validate(user)
 
 
-
 # def verify(token:str,credentials_exception):
 #     try:
 #         payload = jwt.decode(token,SECRET_KEY , algorithms=[ALGORITHM])

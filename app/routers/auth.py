@@ -16,8 +16,8 @@ def login(user_credentials=Depends(OAuth2PasswordRequestForm),   db:Session=Depe
     if utils.verify(user_credentials.password, user.password)==False:
         raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED,detail= "Invalid Credentials")
     token = oauth2.create_access_token({"user_id":user.id})
-
-    return {"Access Token":token,"Token Type":"bearer"}
+    print('Logged in by: ',user.email)
+    return {"access_token":token,"token_type":"bearer"}
 
 
 # @router.post("/login")
