@@ -3,6 +3,15 @@ from pydantic import EmailStr
 from pydantic import BaseModel,constr
 from typing import Optional
 
+class PostBase(BaseModel):
+    title: str
+    content: str
+    published: bool = True
+
+class PostCreate(PostBase):
+    pass
+
+
 class UserOut(BaseModel):
     email: EmailStr
     id:int
@@ -10,28 +19,20 @@ class UserOut(BaseModel):
     class Config:
         from_attributes = True
 
-class Post(BaseModel):
+
+class Post(PostBase):
+    id:int
     title: str
     content: str
     published: bool = True
-    owner : UserOut
-
-class PostBase(BaseModel):
-    title: str
-    content: str
-    published: bool = True
-
-
-
-class PostCreate(PostBase):
-    pass
-    
-
+    owner_id: int
+    owner: UserOut
+    class config:
+        from_attributes= True
 # ? Now we are going to learn about responses from the server.
 class Post_Response(PostBase):
     id:int
     owner_id: int
-    owner: UserOut
     class Config:
         from_attributes = True
 

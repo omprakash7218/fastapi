@@ -1,5 +1,8 @@
+from asyncio import Barrier
+
 from fastapi import FastAPI,HTTPException,status,Depends,Response,APIRouter
 from fastapi.exception_handlers import http_exception_handler
+from typing import Optional
 
 from app.oauth2 import get_current_user # !
 from ..database import  get_db
@@ -22,11 +25,15 @@ router = APIRouter(
 
 # ? GET ALL POST BUT RESPONSE IS FILTERED FIRST 
 #--------------------------------------------------------------------------------------------------------------
-@router.get("/",response_model = List[schemas.Post_Response])
-def show_posts(db:Session=Depends(get_db),current_user:schemas.UserOut=Depends(oauth2.get_current_user),limit: int = 10):
-    print(limit)
-    posts = db.query(models.Post).limit(limit).all()
+@router.get("/",response_model = List[schemas.Post])
+def show_posts(db:Session=Depends(get_db),current_user:schemas.UserOut=Depends(oauth2.get_current_user),limit: int = 10,skip: int = 0,search:Optional[str]=""):
+    print(search)
+    posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
     return posts
+# important words 
+# %20 means space in the search bar
+# for skip the no. of post  -- offset
+# for  limiting no. of post == limit
 #--------------------------------------------------------------------------------------------------------------
 
 # ? GET POST BY ID
@@ -45,8 +52,8 @@ def get_post(id:int,db:Session = Depends(get_db),current_user:int=Depends(oauth2
 
 # ? CREATE POST 
 #--------------------------------------------------------------------------------------------------------------
-@router.post("/",status_code=status.HTTP_201_CREATED,response_model = schemas.Post_Response)
-def create_post(post:schemas.Post,db:Session=Depends(get_db),current_user:schemas.UserOut=Depends(oauth2.get_current_user)):
+@router.post("/",status_code=status.HTTP_201_CREATED,response_model = schemas.Post)
+def create_post(post:schemas.PostCreate,db:Session=Depends(get_db),current_user:schemas.UserOut=Depends(oauth2.get_current_user)):
     new_post = models.Post(owner_id = current_user.id,**post.dict())
     db.add(new_post)
     db.commit()
@@ -58,7 +65,7 @@ def create_post(post:schemas.Post,db:Session=Depends(get_db),current_user:schema
 # !
 #--------------------------------------------------------------------------------------------------------------
 @router.put("/{id}",status_code= status.HTTP_202_ACCEPTED,response_model = schemas.Post_Response)
-def edit_post(id: int, post: schemas.Post,db: Session= Depends(get_db),current_user:int=Depends(oauth2.get_current_user)):
+def edit_post(id: int, post: schemas.PostCreate,db: Session= Depends(get_db),current_user:int=Depends(oauth2.get_current_user)):
     query_post = db.query(models.Post).filter(models.Post.id == id)
     existing_post = query_post.first()
     if existing_post == None:
