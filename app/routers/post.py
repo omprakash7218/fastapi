@@ -26,7 +26,7 @@ router = APIRouter(
 # ? GET ALL POST BUT RESPONSE IS FILTERED FIRST 
 #--------------------------------------------------------------------------------------------------------------
 @router.get("/",response_model = List[schemas.Post])
-def show_posts(db:Session=Depends(get_db),current_user:schemas.UserOut=Depends(oauth2.get_current_user),limit: int = 10,skip: int = 0,search:Optional[str]=""):
+def show_posts(db:Session=Depends(get_db),current_user:schemas.UserOut=Depends(oauth2.get_current_user),limit: int = 100,skip: int = 0,search:Optional[str]=""):
     print(search)
     posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
     return posts
