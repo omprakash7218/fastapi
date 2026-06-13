@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from .. import models,schemas,oauth2
 from typing import List
 
+from sqlalchemy import func
 
 router = APIRouter(
     prefix = "/posts",
@@ -25,11 +26,14 @@ router = APIRouter(
 
 # ? GET ALL POST BUT RESPONSE IS FILTERED FIRST 
 #--------------------------------------------------------------------------------------------------------------
-@router.get("/",response_model = List[schemas.Post])
+@router.get("/",response_model=List[schemas.LikeOut])
+# @router.get("/")
 def show_posts(db:Session=Depends(get_db),current_user:schemas.UserOut=Depends(oauth2.get_current_user),limit: int = 100,skip: int = 0,search:Optional[str]=""):
     print(search)
     posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
-    return posts
+    results = db.query(models.Post,func.count(models.Like.post_id).label("Likes")).join(models.Like, models.Post.id==models.Like.post_id,isouter=True).group_by(models.Post.id).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+    print(results)
+    return results
 # important words 
 # %20 means space in the search bar
 # for skip the no. of post  -- offset
@@ -38,14 +42,12 @@ def show_posts(db:Session=Depends(get_db),current_user:schemas.UserOut=Depends(o
 
 # ? GET POST BY ID
 #--------------------------------------------------------------------------------------------------------------
-@router.get("/{id}")
+@router.get("/{id}",response_model=schemas.LikeOut)
 def get_post(id:int,db:Session = Depends(get_db),current_user:int=Depends(oauth2.get_current_user)):
-    post=db.query(models.Post).filter(models.Post.id == id).first()
+    post=db.query(models.Post,func.count(models.Like.post_id).label("Likes")).join(models.Like,models.Like.post_id==models.Post.id,isouter=True).group_by(models.Post.id).filter(models.Post.id==id).first()
     if post == None:
         raise HTTPException(status_code = status.HTTP_404_NOT_FOUND,detail=f"No post with id = {id}")
     
-    if post.owner_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="Unauthrized User")
     print("Requested by: ",current_user.email)
     return post
 #--------------------------------------------------------------------------------------------------------------

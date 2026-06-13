@@ -2,6 +2,7 @@ from datetime import datetime
 from pydantic import EmailStr
 from pydantic import BaseModel,constr
 from typing import Optional
+from pydantic.types import conint
 
 class PostBase(BaseModel):
     title: str
@@ -28,7 +29,13 @@ class Post(PostBase):
     owner_id: int
     owner: UserOut
     class config:
-        from_attributes= True
+        orm_mode= True
+class LikeOut(BaseModel):
+    Post:Post
+    Likes: int
+    class Config:
+        orm_mode = True
+        
 # ? Now we are going to learn about responses from the server.
 class Post_Response(PostBase):
     id:int
@@ -57,3 +64,12 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id: Optional[int]=None
+
+class Like(BaseModel):
+    post_id: int
+    dir: conint(le=1)
+
+
+
+
+    

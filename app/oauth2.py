@@ -10,11 +10,11 @@ from . config import settings
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='login')
 
 #SECRET_KEY
-SECRET_KEY = settings.SECRET_KEY
+SECRET_KEY = settings.secret_key
 #ALGORITHM 
-ALGORITHM = settings.ALGORITHM
+ALGORITHM = settings.algorithm
 #EXPIRATION_TIME
-ACCESS_TOKEN_EXPIRY_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
+ACCESS_TOKEN_EXPIRY_MINUTES = settings.access_token_expire_minutes
 
 
 def create_access_token(data:dict):
@@ -22,6 +22,7 @@ def create_access_token(data:dict):
     expire = datetime.utcnow()+timedelta(minutes=ACCESS_TOKEN_EXPIRY_MINUTES)
     to_encode.update({"exp":expire})
     access_token = jwt.encode(to_encode ,SECRET_KEY,algorithm=ALGORITHM)
+    print("secret Key:",settings.secret_key)
     return access_token
                         
 
@@ -42,6 +43,7 @@ def get_current_user(token:str=Depends(oauth2_scheme),db:Session = Depends(datab
     user = db.query(models.User).filter(models.User.id == token_data.id).first()
     if not user :
         raise credentials_exception
+
     return schemas.UserOut.model_validate(user)
 
 
