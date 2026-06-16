@@ -22,4 +22,4 @@ app.include_router(like.router)
 
 @app.get("/")
 def Hello():
-    return {"message":"Hello world"}
+    return {"message":"Hello world , This website is maintained by Omprakash Chaudhary!!"}
