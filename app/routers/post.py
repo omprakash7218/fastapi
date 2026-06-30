@@ -63,7 +63,7 @@ def create_post(post:schemas.PostCreate,db:Session=Depends(get_db),current_user:
     return new_post
 #--------------------------------------------------------------------------------------------------------------
 
-# ? EDIT POST
+# ? EDIT POSTd
 # !
 #--------------------------------------------------------------------------------------------------------------
 @router.put("/{id}",status_code= status.HTTP_202_ACCEPTED,response_model = schemas.Post_Response)
